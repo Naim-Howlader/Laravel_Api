@@ -23,4 +23,11 @@ Route::get('/users/{id?}', [UserController::class, 'showUser']);
 //Post api for add/insert users
 Route::post('/add-user', [UserController::class, 'addUser']);
 
+//Post api for add/insert multiple users
+Route::post('/add-multiple-users',[UserController::class, 'addMultipleUsers']);
 
+//Put api for update users
+Route::put('/update-user/{id}', [UserController::class,'updateUser']);
+
+//Patch api for update users's single record
+Route::patch('/update-single-record/{id}', [UserController::class, 'UpdateSingleRecord']);
