@@ -31,3 +31,21 @@ Route::put('/update-user/{id}', [UserController::class,'updateUser']);
 
 //Patch api for update users's single record
 Route::patch('/update-single-record/{id}', [UserController::class, 'UpdateSingleRecord']);
+
+//Delete api for delete user
+Route::delete('/delete-user/{id}', [UserController::class, 'deleteUser']);
+
+//Delete api for delete user with json
+Route::delete('/delete-user-json', [UserController::class, 'deleteUserJson']);
+
+//Delete api for delete multiple user
+Route::delete('/delete-multiple-user/{ids}', [UserController::class, 'deleteMultipleUser']);
+
+//Delete api for delete multiple user with json
+Route::delete('/delete-multiple-user-json', [UserController::class, 'deleteMultipleUserJson']);
+
+
+
+
+//Laravel Passport
+Route::post('user-register-passport', [UserController::class, 'userRegisterPassport']);

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Auth;
 class UserController extends Controller
 {
     public function showUser($id=null){
@@ -77,7 +78,7 @@ class UserController extends Controller
                 'password' => Hash::make($addUser['password']),
             ]);
             $message = "All users added successfully";
-           
+
         }
         return response()->json(['message'=> $message],201);
     }
@@ -134,6 +135,92 @@ class UserController extends Controller
             $user->update();
             $message = "User's single record updated successfully";
             return response()->json(['message'=> $message],202);
+        }
+    }
+    public function deleteUser($id){
+        User::findOrFail($id)->delete();
+        $message = "User deleted successfully";
+        return response()->json(['message'=>$message],200);
+    }
+    public function deleteUserJson(Request $request){
+        if($request->ismethod('delete')){
+            $data = $request->all();
+            User::where('id',$data['id'])->delete();
+            $message = "User deleted successfully with json";
+            return response()->json(['message'=>$message],200);
+        }
+    }
+    public function deleteMultipleUser($ids){
+        $ids = explode(',',$ids); //explode method for separate multiple ids
+        User::whereIn('id',$ids)->delete();
+        $message = "Multiple user deleted successfully";
+        return response()->json(['message'=>$message],200);
+    }
+    public function deleteMultipleUserJson(Request $request){
+        $header = $request->header('Authorization');
+        if($header==''){
+            $message = "Authorization is required";
+            return response()->json(['message'=>$message],422);
+        }else{
+            if($header=='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik5haW0gSG93bGFkZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.z2VJHUN4XUPrE_KCGQ-SHk5874mfzCUbz8iTXHLXZt8'){
+                if($request->ismethod('delete')){
+                    $data = $request->all();
+                    User::whereIn('id',$data['ids'])->delete();
+                    $message = "Multiple user deleted successfully with json";
+                return response()->json(['message'=>$message],200);
+                }
+            }else{
+                $message = "Authorization does not match";
+                return response()->json(['message'=>$message],422);
+            }
+        }
+
+    }
+
+
+
+    public function userRegisterPassport(Request $request){
+        if($request->ismethod('post')){
+            $data = $request->all();
+            //return $data;
+
+            //Customer validation start here
+            $rules = [
+                'name' => 'required',
+                'email' => 'required|email|unique:users',
+                'password' => 'required',
+            ];
+            $errorMsg = [
+                'name.required' => "Name must be required",
+                'email.required' => "Email must be required",
+                'email.email' => "Email must be a valid email",
+                'password.required' => "Password must be required",
+            ];
+            $validation = Validator::make($data,$rules);
+            if($validation->fails()){
+                return response()->json($validation->errors(),422);
+            }
+
+            //Customer validation end here
+
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
+            if(Auth::attempt(['email'=>$data['email'], 'password'=>$data['password']])){
+                $user = User::where('email',$data['email'])->first();
+                $access_token = $user->createToken($data['email'])->accessToken;
+                // return  response()->json(['message'=> $access_token],422);die;
+                User::where('email',$data['email'])->update(['access_token'=>$access_token]);
+                $message = "User Register Successfully";
+                return response()->json(['message'=> $message,'Access Token'=>$access_token],201);
+            }
+            else{
+                $message = "Opps Error !";
+                return response()->json(['message'=> $message],422);
+            }
+
         }
     }
 }
